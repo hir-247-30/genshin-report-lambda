@@ -9,7 +9,7 @@ export const handler: Handler = async (event: APIGatewayProxyEvent): Promise<voi
     method: 'GET',
     params: {
         role_id: process.env['USER_ID'] ?? '',
-        server: 'asia',
+        server: 'os_asia',
         schedule_type: 1,
     },
     headers: headers
@@ -18,7 +18,7 @@ export const handler: Handler = async (event: APIGatewayProxyEvent): Promise<voi
   const response = await axiosRequest<HoyoLabDailyApiResponse>(requestOptions);
 
   if(!response){
-    throw new Error('Api response has been empty.');
+    throw new Error('Api response has been empty');
   }
 
   await checkAndReport(response);
