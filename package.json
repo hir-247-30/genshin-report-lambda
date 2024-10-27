@@ -6,7 +6,8 @@
   "scripts": {
     "test": "npx tsc --noEmit",
     "build": "ts-node esbuild.ts",
-    "zip": "zip upload.zip dist/index.mjs"
+    "zip": "zip upload.zip dist/index.mjs",
+    "local": "cd src/local && ts-node run.ts"
   },
   "author": "hir-247-30",
   "license": "ISC",
@@ -14,6 +15,7 @@
     "@tsconfig/recommended": "^1.0.7",
     "@types/aws-lambda": "^8.10.145",
     "@types/node": "^22.8.1",
+    "dotenv": "^16.4.5",
     "esbuild": "^0.24.0",
     "install": "^0.13.0",
     "npm": "^10.9.0",
