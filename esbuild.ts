@@ -9,6 +9,9 @@ const config: esbuild.BuildOptions = {
   target: ['es2021'],
   format: 'esm',
   outfile: 'dist/index.mjs',
+  banner: {
+    js: "import{createRequire}from'module';const require=createRequire(import.meta.url);",
+  },
 };
 
 esbuild.build(config);
