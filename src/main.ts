@@ -1,8 +1,8 @@
-import { Handler, APIGatewayProxyEvent } from 'aws-lambda';
+import { Handler, APIGatewayProxyEvent, ProxyResult } from 'aws-lambda';
 import { buildHoyoLabCookie, axiosRequest, checkAndReport } from './service';
 import { HoyoLabDailyApiResponse } from './types';
 
-export const handler: Handler = async (event: APIGatewayProxyEvent): Promise<void> => {
+export const handler: Handler = async (event: APIGatewayProxyEvent): Promise<ProxyResult> => {
   const headers = buildHoyoLabCookie();
   const requestOptions = {
     url: 'https://bbs-api-os.hoyoverse.com/game_record/genshin/api/dailyNote',
@@ -21,5 +21,13 @@ export const handler: Handler = async (event: APIGatewayProxyEvent): Promise<voi
     throw new Error('Api response has been empty');
   }
 
-  await checkAndReport(response);
+  const res = await checkAndReport(response);
+
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(res ?? ''),
+  }
 }

@@ -40,7 +40,7 @@ export async function axiosRequest<T>(requestOptions: {
         });
   }
 
-  export async function checkAndReport(hoyoLabDailyApiResponse: HoyoLabDailyApiResponse): Promise<void> {
+  export async function checkAndReport(hoyoLabDailyApiResponse: HoyoLabDailyApiResponse): Promise<void | LineNotifyResponse> {
     const {
         retcode,
         message,
@@ -68,12 +68,12 @@ export async function axiosRequest<T>(requestOptions: {
     // 探索派遣
     const reportExpeditions = reportExpeditionsFinished(data.expeditions);
 
-    executeReport({ reportResin, reportHomeCoin, reportTransformer, reportExpeditions });
+    return await executeReport({ reportResin, reportHomeCoin, reportTransformer, reportExpeditions });
 }
 
 async function executeReport(
     params: { reportResin: boolean; reportHomeCoin: boolean; reportTransformer: boolean; reportExpeditions: boolean; },
-): Promise<void> {
+): Promise<void | LineNotifyResponse> {
     const {
         reportResin,
         reportHomeCoin,
@@ -99,7 +99,7 @@ async function executeReport(
         },
     };
 
-    axiosRequest<LineNotifyResponse>(requestOptions);
+    return await axiosRequest<LineNotifyResponse>(requestOptions);
 }
 
 function reportForResinRecoveryTime(resinRecoveryTime: string): boolean {
