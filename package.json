@@ -6,7 +6,7 @@
   "scripts": {
     "test": "npx tsc --noEmit",
     "build": "ts-node esbuild.ts",
-    "zip": "cd dist && zip upload.zip index.mjs",
+    "zip": "ts-node esbuild.ts && cd dist && zip upload.zip index.mjs",
     "local": "cd src/local && ts-node run.ts"
   },
   "author": "hir-247-30",
