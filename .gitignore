@@ -1,3 +1,7 @@
 node_modules/
 dist/
+terraform/.terraform
+terraform/.terraform.lock.hcl
+terraform/.tfstate
+terraform/providers.tf
 .env
