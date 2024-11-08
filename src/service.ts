@@ -1,4 +1,6 @@
 import dayjs from 'dayjs'
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { HoyoLabDailyApiResponse, LineNotifyResponse, HoyoLabDailyApiTransformer, HoyoLabDailyApiExpeditions } from './types';
 
@@ -135,8 +137,13 @@ function reportExpeditionsFinished(expeditions: HoyoLabDailyApiExpeditions[]): b
 }
 
 function reportDailyTaskRewardNotObtained(isExtraTaskRewardReceived: boolean): boolean {
+    // こんなところでやるな
+    dayjs.extend(utc);
+    dayjs.extend(timezone);
+    dayjs.tz.setDefault("Asia/Tokyo");
+
     // 指定した時刻以降
-    const now = dayjs();
+    const now = dayjs().tz();
     return !isExtraTaskRewardReceived && now.hour() >= DAILY_REWARD_NOTIFY_OCLOCK;
 }
 
