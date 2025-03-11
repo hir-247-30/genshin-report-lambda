@@ -2,7 +2,7 @@ import dayjs from 'dayjs'
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { HoyoLabDailyApiResponse, LineNotifyResponse, HoyoLabDailyApiTransformer, HoyoLabDailyApiExpeditions } from './types';
+import { HoyoLabDailyApiResponse, HoyoLabDailyApiTransformer, HoyoLabDailyApiExpeditions } from './types';
 
 const REPORT_BORDER_RESIN_RECOVERY_TIME = 7200;
 const REPORT_BORDER_HOME_COIN_RECOVERY_TIME = 36000;
@@ -18,12 +18,14 @@ export async function axiosRequest<T>(requestOptions: {
     url: string;
     method: string;
     params?: { [key: string]: string | number; };
+    data?: { [key: string]: string | number; };
     headers?: { [key: string]: string; };
 }) {
     const {
         url,
         method,
         params,
+        data,
         headers,
     } = requestOptions;
   
@@ -31,6 +33,7 @@ export async function axiosRequest<T>(requestOptions: {
         url,
         method,
         params,
+        data,
         headers,
     };
   
@@ -40,11 +43,10 @@ export async function axiosRequest<T>(requestOptions: {
         })
         .catch((e: AxiosError<{ error: string; }>) => {
             console.log(e.message);
-            return undefined;
         });
   }
 
-  export async function checkAndReport(hoyoLabDailyApiResponse: HoyoLabDailyApiResponse): Promise<void | LineNotifyResponse> {
+  export async function checkAndReport(hoyoLabDailyApiResponse: HoyoLabDailyApiResponse): Promise<void | String> {
     const {
         retcode,
         message,
@@ -85,7 +87,7 @@ async function executeReport(
         reportExpeditions: boolean;
         reportDailyTask: boolean
     },
-): Promise<void | LineNotifyResponse> {
+): Promise<void | string> {
     const {
         reportResin,
         reportHomeCoin,
@@ -98,21 +100,16 @@ async function executeReport(
         return;
     }
 
-    const message = buildNotifyMessage({ reportResin, reportHomeCoin, reportTransformer, reportExpeditions, reportDailyTask });
+    const content = buildNotifyMessage({ reportResin, reportHomeCoin, reportTransformer, reportExpeditions, reportDailyTask });
 
     const requestOptions = {
-        url: 'https://notify-api.line.me/api/notify',
-        method: 'POST',
-        params: {
-            message,
-        },
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: `Bearer ${process.env['PERSONAL_LINE_ACCESS_TOKEN']}`,
-        },
+        url    : process.env['DISCORD_WEBHOOK_URL']!,
+        method : 'POST',
+        data   : { content },
+        headers: { 'Content-Type': 'application/json' },
     };
 
-    return await axiosRequest<LineNotifyResponse>(requestOptions);
+    return await axiosRequest<void | string>(requestOptions);
 }
 
 function reportForResinRecoveryTime(resinRecoveryTime: string): boolean {
