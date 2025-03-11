@@ -69,8 +69,3 @@ type HoyoLabDailyApiDailyTask = {
     // デイリー任務完了報告の有無
     is_extra_task_reward_received: boolean;
 };
-
-export type LineNotifyResponse = {
-    status: string;
-    message: string;
-};
