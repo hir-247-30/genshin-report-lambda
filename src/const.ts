@@ -1,4 +1,5 @@
 export const HOYOLAB_DAILY_API_URL = 'https://bbs-api-os.hoyoverse.com/game_record/genshin/api/dailyNote';
+export const HOYOLAB_DAILY_API_SEREVER_AREA = 'os_asia';
 export const REPORT_BORDER_RESIN_RECOVERY_TIME = 7200;
 export const REPORT_BORDER_HOME_COIN_RECOVERY_TIME = 36000;
 export const DAILY_REWARD_NOTIFY_OCLOCK = 21;

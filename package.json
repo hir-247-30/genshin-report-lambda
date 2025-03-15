@@ -4,7 +4,8 @@
   "description": "genshin-report-lambda",
   "main": "index.js",
   "scripts": {
-    "test": "npx tsc --noEmit",
+    "test": "npx tsc --noEmit && npx eslint . --ext .ts",
+    "format": "npx eslint . --fix --ext .ts",
     "build": "ts-node esbuild.ts",
     "zip": "ts-node esbuild.ts && cd dist && zip upload.zip index.mjs",
     "local": "cd src/local && ts-node run.ts"
@@ -17,10 +18,12 @@
     "@types/node": "^22.8.1",
     "dotenv": "^16.4.5",
     "esbuild": "^0.24.0",
+    "eslint": "^9.22.0",
     "install": "^0.13.0",
     "npm": "^10.9.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.26.1"
   },
   "dependencies": {
     "axios": "^1.7.7",

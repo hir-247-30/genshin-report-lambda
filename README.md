@@ -1,6 +1,6 @@
 ### 概要
 
-原神の通知を送信するプログラム。
+原神の通知をDiscordに送信する。
 LamndaかCronJobでの定期実行を想定。
 
 ```
@@ -14,10 +14,6 @@ npm run build
 npm run zip
 
 # 
-ローカル実行 cronとかで実行する場合はこっち
+ローカル確認あるいはcronとかで実行する場合はこちらを使用する
 npm run local
 ```
-
-### TODO
-
-LINE通知が廃止されるっぽいので、それまでにdiscord通知など別のものに切り替えたい。

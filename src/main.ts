@@ -1,7 +1,7 @@
-import { Handler, APIGatewayProxyEvent, ProxyResult } from 'aws-lambda';
+import { Handler, ProxyResult } from 'aws-lambda';
 import { requestHoyoLabApi, report } from './service';
 
-export const handler: Handler = async (event: APIGatewayProxyEvent): Promise<ProxyResult> => {
+export const handler: Handler = async (): Promise<ProxyResult> => {
 
   const response = await requestHoyoLabApi();
 
@@ -17,5 +17,5 @@ export const handler: Handler = async (event: APIGatewayProxyEvent): Promise<Pro
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(res ?? ''),
-  }
-}
+  };
+};

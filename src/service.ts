@@ -1,18 +1,18 @@
-import dayjs from 'dayjs'
+import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { axiosRequest } from './common';
-import { HOYOLAB_DAILY_API_URL, REPORT_BORDER_RESIN_RECOVERY_TIME, REPORT_BORDER_HOME_COIN_RECOVERY_TIME, DAILY_REWARD_NOTIFY_OCLOCK } from './const';
+import { HOYOLAB_DAILY_API_URL, HOYOLAB_DAILY_API_SEREVER_AREA, REPORT_BORDER_RESIN_RECOVERY_TIME, REPORT_BORDER_HOME_COIN_RECOVERY_TIME, DAILY_REWARD_NOTIFY_OCLOCK } from './const';
 import { HoyoLabDailyApiResponse, HoyoLabDailyApiTransformer, HoyoLabDailyApiExpeditions } from './types';
 
-export async function requestHoyoLabApi (): Promise<HoyoLabDailyApiResponse | void> {
+export async function requestHoyoLabApi (): Promise<void | HoyoLabDailyApiResponse> {
     const headers = buildHoyoLabCookie();
     const requestOptions = {
-      url: HOYOLAB_DAILY_API_URL,
+      url   : HOYOLAB_DAILY_API_URL,
       method: 'GET',
       params: {
-          role_id: process.env['USER_ID'] ?? '',
-          server: 'os_asia',
+          role_id      : process.env['USER_ID'] ?? '',
+          server       : HOYOLAB_DAILY_API_SEREVER_AREA,
           schedule_type: 1,
       },
       headers: headers
@@ -21,22 +21,22 @@ export async function requestHoyoLabApi (): Promise<HoyoLabDailyApiResponse | vo
     return await axiosRequest<HoyoLabDailyApiResponse>(requestOptions);
 }
 
-export async function report (hoyoLabDailyApiResponse: HoyoLabDailyApiResponse): Promise<void | String> {
+export async function report (hoyoLabDailyApiResponse: HoyoLabDailyApiResponse): Promise<void | string> {
     const {
         retcode,
         message,
         data,
     } = hoyoLabDailyApiResponse;
 
-    if(retcode !== 0){
+    if (retcode !== 0) {
         throw new Error(`Irregular response retcode : ${retcode}`);
     }
 
-    if(message !== 'OK'){
+    if (message !== 'OK') {
        throw new Error(`Irregular response message : ${message}`);
     }
 
-    if(data == null){
+    if (data == null) {
         throw new Error(`Irregular response data : is null`);
     }
 
@@ -95,25 +95,17 @@ function reportDailyTaskRewardNotObtained (isExtraTaskRewardReceived: boolean): 
 async function requestDidcordWebhook (
     params: {
         reportResin: boolean;
-        reportHomeCoin: boolean;
+        reportHomeCoin   : boolean;
         reportTransformer: boolean;
         reportExpeditions: boolean;
-        reportDailyTask: boolean
+        reportDailyTask  : boolean
     },
 ): Promise<void | string> {
     if (!Object.values(params).filter(v => v).length) {
         return;
     }
 
-    const {
-        reportResin,
-        reportHomeCoin,
-        reportTransformer,
-        reportExpeditions,
-        reportDailyTask,
-    } = params;
-
-    const content = buildNotifyMessage({ reportResin, reportHomeCoin, reportTransformer, reportExpeditions, reportDailyTask });
+    const content = buildNotifyMessage(params);
 
     const requestOptions = {
         url    : process.env['DISCORD_WEBHOOK_URL']!,
@@ -127,11 +119,11 @@ async function requestDidcordWebhook (
 
 function buildNotifyMessage (
     params: {
-        reportResin: boolean;
-        reportHomeCoin: boolean;
+        reportResin      : boolean;
+        reportHomeCoin   : boolean;
         reportTransformer: boolean;
         reportExpeditions: boolean;
-        reportDailyTask: boolean
+        reportDailyTask  : boolean
     }): string {
     const {
         reportResin,
@@ -141,11 +133,11 @@ function buildNotifyMessage (
         reportDailyTask,
     } = params;
 
-    const resinMessage = reportResin ? '\n樹脂があふれそうだぞ！' : '';
-    const homeCoinMessage = reportHomeCoin ? '\n洞天集宝盆があふれそうだぞ！' : '';
+    const resinMessage       = reportResin ? '\n樹脂があふれそうだぞ！' : '';
+    const homeCoinMessage    = reportHomeCoin ? '\n洞天集宝盆があふれそうだぞ！' : '';
     const transformerMessage = reportTransformer ? '\n参量物質変化器が使用可能になったぞ！' : '';
     const expeditionsMessage = reportExpeditions ? '\n探索派遣が終わったぞ！' : '';
-    const dailyTaskMessage = reportDailyTask ? '\nデイリー任務の報告がまだ終わってないぞ！' : '';
+    const dailyTaskMessage   = reportDailyTask ? '\nデイリー任務の報告がまだ終わってないぞ！' : '';
 
     return `\nおい！${resinMessage}${homeCoinMessage}${transformerMessage}${expeditionsMessage}${dailyTaskMessage}`;
 }
