@@ -1,52 +1,27 @@
 import dayjs from 'dayjs'
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import { axiosRequest } from './common';
+import { HOYOLAB_DAILY_API_URL, REPORT_BORDER_RESIN_RECOVERY_TIME, REPORT_BORDER_HOME_COIN_RECOVERY_TIME, DAILY_REWARD_NOTIFY_OCLOCK } from './const';
 import { HoyoLabDailyApiResponse, HoyoLabDailyApiTransformer, HoyoLabDailyApiExpeditions } from './types';
 
-const REPORT_BORDER_RESIN_RECOVERY_TIME = 7200;
-const REPORT_BORDER_HOME_COIN_RECOVERY_TIME = 36000;
-const DAILY_REWARD_NOTIFY_OCLOCK = 21;
-
-export function buildHoyoLabCookie() {
-    return {
-        Cookie: `ltoken_v2=${process.env['HOYOLAB_COOKIE_LTOKEN']}; ltuid_v2=${process.env['HOYOLAB_COOKIE_LUID']}`,
+export async function requestHoyoLabApi (): Promise<HoyoLabDailyApiResponse | void> {
+    const headers = buildHoyoLabCookie();
+    const requestOptions = {
+      url: HOYOLAB_DAILY_API_URL,
+      method: 'GET',
+      params: {
+          role_id: process.env['USER_ID'] ?? '',
+          server: 'os_asia',
+          schedule_type: 1,
+      },
+      headers: headers
     };
-  }
-  
-export async function axiosRequest<T>(requestOptions: {
-    url: string;
-    method: string;
-    params?: { [key: string]: string | number; };
-    data?: { [key: string]: string | number; };
-    headers?: { [key: string]: string; };
-}) {
-    const {
-        url,
-        method,
-        params,
-        data,
-        headers,
-    } = requestOptions;
-  
-    const options: AxiosRequestConfig = {
-        url,
-        method,
-        params,
-        data,
-        headers,
-    };
-  
-    return axios(options)
-        .then((res: AxiosResponse<T>) => {
-            return res.data;
-        })
-        .catch((e: AxiosError<{ error: string; }>) => {
-            console.log(e.message);
-        });
-  }
 
-  export async function checkAndReport(hoyoLabDailyApiResponse: HoyoLabDailyApiResponse): Promise<void | String> {
+    return await axiosRequest<HoyoLabDailyApiResponse>(requestOptions);
+}
+
+export async function report (hoyoLabDailyApiResponse: HoyoLabDailyApiResponse): Promise<void | String> {
     const {
         retcode,
         message,
@@ -76,10 +51,48 @@ export async function axiosRequest<T>(requestOptions: {
     // デイリー任務
     const reportDailyTask = reportDailyTaskRewardNotObtained(data.is_extra_task_reward_received);
 
-    return await executeReport({ reportResin, reportHomeCoin, reportTransformer, reportExpeditions, reportDailyTask });
+    return await requestDidcordWebhook({ reportResin, reportHomeCoin, reportTransformer, reportExpeditions, reportDailyTask });
 }
 
-async function executeReport(
+function buildHoyoLabCookie () {
+    return {
+        Cookie: `ltoken_v2=${process.env['HOYOLAB_COOKIE_LTOKEN']}; ltuid_v2=${process.env['HOYOLAB_COOKIE_LUID']}`,
+    };
+}
+
+function reportForResinRecoveryTime (resinRecoveryTime: string): boolean {
+    if (REPORT_BORDER_RESIN_RECOVERY_TIME < 0) return false;
+
+    return REPORT_BORDER_RESIN_RECOVERY_TIME > Number(resinRecoveryTime);
+}
+
+function reportForHomeCoinRecoveryTime (homeCoinRecoveryTime: string): boolean {
+    if (REPORT_BORDER_HOME_COIN_RECOVERY_TIME < 0) return false;
+
+    return REPORT_BORDER_HOME_COIN_RECOVERY_TIME > Number(homeCoinRecoveryTime);
+}
+
+function reportAvailableOnTransformer (transformer: HoyoLabDailyApiTransformer): boolean {
+    return transformer.recovery_time.reached;
+}
+
+function reportExpeditionsFinished (expeditions: HoyoLabDailyApiExpeditions[]): boolean {
+    const finishedExpeditions = expeditions.filter(ele => ele.status === 'Finished');
+    return finishedExpeditions.length > 0;
+}
+
+function reportDailyTaskRewardNotObtained (isExtraTaskRewardReceived: boolean): boolean {
+    // こんなところでやるな
+    dayjs.extend(utc);
+    dayjs.extend(timezone);
+    dayjs.tz.setDefault("Asia/Tokyo");
+
+    // 指定した時刻以降
+    const now = dayjs().tz();
+    return !isExtraTaskRewardReceived && now.hour() >= DAILY_REWARD_NOTIFY_OCLOCK;
+}
+
+async function requestDidcordWebhook (
     params: {
         reportResin: boolean;
         reportHomeCoin: boolean;
@@ -88,6 +101,10 @@ async function executeReport(
         reportDailyTask: boolean
     },
 ): Promise<void | string> {
+    if (!Object.values(params).filter(v => v).length) {
+        return;
+    }
+
     const {
         reportResin,
         reportHomeCoin,
@@ -95,10 +112,6 @@ async function executeReport(
         reportExpeditions,
         reportDailyTask,
     } = params;
-
-    if (!reportResin && !reportHomeCoin && !reportTransformer && !reportExpeditions && !reportDailyTask) {
-        return;
-    }
 
     const content = buildNotifyMessage({ reportResin, reportHomeCoin, reportTransformer, reportExpeditions, reportDailyTask });
 
@@ -112,39 +125,7 @@ async function executeReport(
     return await axiosRequest<void | string>(requestOptions);
 }
 
-function reportForResinRecoveryTime(resinRecoveryTime: string): boolean {
-    if (REPORT_BORDER_RESIN_RECOVERY_TIME < 0) return false;
-
-    return REPORT_BORDER_RESIN_RECOVERY_TIME > Number(resinRecoveryTime);
-}
-
-function reportForHomeCoinRecoveryTime(homeCoinRecoveryTime: string): boolean {
-    if (REPORT_BORDER_HOME_COIN_RECOVERY_TIME < 0) return false;
-
-    return REPORT_BORDER_HOME_COIN_RECOVERY_TIME > Number(homeCoinRecoveryTime);
-}
-
-function reportAvailableOnTransformer(transformer: HoyoLabDailyApiTransformer): boolean {
-    return transformer.recovery_time.reached;
-}
-
-function reportExpeditionsFinished(expeditions: HoyoLabDailyApiExpeditions[]): boolean {
-    const finishedExpeditions = expeditions.filter(ele => ele.status === 'Finished');
-    return finishedExpeditions.length > 0;
-}
-
-function reportDailyTaskRewardNotObtained(isExtraTaskRewardReceived: boolean): boolean {
-    // こんなところでやるな
-    dayjs.extend(utc);
-    dayjs.extend(timezone);
-    dayjs.tz.setDefault("Asia/Tokyo");
-
-    // 指定した時刻以降
-    const now = dayjs().tz();
-    return !isExtraTaskRewardReceived && now.hour() >= DAILY_REWARD_NOTIFY_OCLOCK;
-}
-
-function buildNotifyMessage(
+function buildNotifyMessage (
     params: {
         reportResin: boolean;
         reportHomeCoin: boolean;

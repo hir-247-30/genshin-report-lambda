@@ -1,6 +1,4 @@
-const MAX_RESIN = 200;
-const MAX_HOME_COIN = 1200;
-const DAILY_TASK_NUMBER = 4;
+import { MAX_RESIN, MAX_HOME_COIN, DAILY_TASK_NUMBER } from './const';
 
 export type HoyoLabDailyApiResponse = {
     retcode: number;
