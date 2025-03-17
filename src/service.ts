@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { axiosRequest } from './common';
-import { HOYOLAB_DAILY_API_URL, HOYOLAB_DAILY_API_SEREVER_AREA, REPORT_BORDER_RESIN_RECOVERY_TIME, REPORT_BORDER_HOME_COIN_RECOVERY_TIME, DAILY_REWARD_NOTIFY_OCLOCK } from './const';
+import { HOYOLAB_DAILY_API_URL, HOYOLAB_DAILY_API_SEREVER_AREA, HOYOLAB_DAILY_API_SCHEDULE_TYPE, REPORT_BORDER_RESIN_RECOVERY_TIME, REPORT_BORDER_HOME_COIN_RECOVERY_TIME, DAILY_REWARD_NOTIFY_OCLOCK } from './const';
 import { HoyoLabDailyApiResponse, HoyoLabDailyApiTransformer, HoyoLabDailyApiExpeditions } from './types';
 
 export async function requestHoyoLabApi (): Promise<void | HoyoLabDailyApiResponse> {
@@ -11,9 +11,9 @@ export async function requestHoyoLabApi (): Promise<void | HoyoLabDailyApiRespon
       url   : HOYOLAB_DAILY_API_URL,
       method: 'GET',
       params: {
-          role_id      : process.env['USER_ID'] ?? '',
+          role_id      : process.env['USER_ID']!,
           server       : HOYOLAB_DAILY_API_SEREVER_AREA,
-          schedule_type: 1,
+          schedule_type: HOYOLAB_DAILY_API_SCHEDULE_TYPE,
       },
       headers: headers
     };
@@ -94,7 +94,7 @@ function reportDailyTaskRewardNotObtained (isExtraTaskRewardReceived: boolean): 
 
 async function requestDidcordWebhook (
     params: {
-        reportResin: boolean;
+        reportResin      : boolean;
         reportHomeCoin   : boolean;
         reportTransformer: boolean;
         reportExpeditions: boolean;

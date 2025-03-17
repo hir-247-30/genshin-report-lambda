@@ -13,7 +13,6 @@ npm run build
 # ビルド〜Lambda用のzipファイル作成まで
 npm run zip
 
-# 
-ローカル確認あるいはcronとかで実行する場合はこちらを使用する
+# ローカル確認あるいはcronとかで実行する場合はこちらを使用する
 npm run local
 ```
