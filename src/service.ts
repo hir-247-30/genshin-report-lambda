@@ -54,7 +54,7 @@ export async function report (hoyoLabDailyApiResponse: HoyoLabDailyApiResponse):
     return await requestDidcordWebhook({ reportResin, reportHomeCoin, reportTransformer, reportExpeditions, reportDailyTask });
 }
 
-function buildHoyoLabCookie () {
+function buildHoyoLabCookie (): { Cookie: string} {
     return {
         Cookie: `ltoken_v2=${process.env['HOYOLAB_COOKIE_LTOKEN']}; ltuid_v2=${process.env['HOYOLAB_COOKIE_LUID']}`,
     };
